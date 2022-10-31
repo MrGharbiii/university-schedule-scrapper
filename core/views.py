@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
@@ -33,9 +34,7 @@ def get_schedule(selected_class):
     headers = {
         "Authorization" : TOKEN
     }
-    print("========================================")
     print("Getting schedule of " + selected_class)
-    print("========================================")
     response = requests.get(f'https://issatso.rnu.tn/bo/public/api/student/timetable/{selected_class}', headers=headers)
     json_response = response.json()
     schedule = json_response['html']
@@ -45,7 +44,6 @@ def get_schedule(selected_class):
 def check_unavailable_classrooms(request):
     weekday = request.GET.get('weekday')
     session = request.GET.get('session')
-    print(weekday, session)
     if session == "S4'":
         if weekday != "6-Samedi":
             return HttpResponse("<center><h2>S4' is only available on Saturday</h2></center><a href='check_unavailable_classrooms_form'><button>Back</button></a>")
@@ -124,13 +122,16 @@ def update_schedules(request):
                   "Prepa-A1-02","Prepa-A1-03","Prepa-A1-04","Prepa-A2-01","Prepa-A2-02",
                   "Prepa-A2-03","Prepa-A2-04","MP-MERE-A1-01","MP-ENG-A1-01"
                 ]
-    for _class in classes:
-        schedule_html = get_schedule(_class)
-        if Class.objects.filter(name=_class).exists():
-            _class = Class.objects.get(name=_class)
-            _class.schedule_html = schedule_html
-            _class.occupied_classrooms = html_parse(schedule_html)
-            _class.save()
-        else:
-            Class(name=_class, schedule_html=schedule_html, occupied_classrooms=html_parse(schedule_html)).save()
-    return HttpResponse("<h1>Done</h1> <br><br><a href='/'><button>Back</button></a>")
+    with ThreadPoolExecutor(max_workers=len(classes)) as executor:
+        executor.map(store_schedule, classes)
+    return HttpResponse("<h1>Schedules Updated!</h1> <br><br><a href='/'><button>Back</button></a>")
+
+def store_schedule(_class):
+    schedule_html = get_schedule(_class)
+    if Class.objects.filter(name=_class).exists():
+        _class = Class.objects.get(name=_class)
+        _class.schedule_html = schedule_html
+        _class.occupied_classrooms = html_parse(schedule_html)
+        _class.save()
+    else:
+        Class(name=_class, schedule_html=schedule_html, occupied_classrooms=html_parse(schedule_html)).save()
