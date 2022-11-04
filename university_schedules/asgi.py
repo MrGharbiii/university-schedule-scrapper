@@ -1,5 +1,5 @@
 """
-ASGI config for issatso_schedules project.
+ASGI config for university_schedules project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'issatso_schedules.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'university_schedules.settings')
 
 application = get_asgi_application()
