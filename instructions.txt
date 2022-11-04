@@ -1,0 +1,5 @@
+1- Create .env file and insert your token in it with the name "TOKEN"
+2- Run python manage.py migrate
+3- Run python manage.py runserver
+4- go to /update_schedules route
+5- Done! You can view the schedules

@@ -1,5 +1,5 @@
 """
-WSGI config for issatso_schedules project.
+WSGI config for university_schedules project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'issatso_schedules.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'university_schedules.settings')
 
 application = get_wsgi_application()
