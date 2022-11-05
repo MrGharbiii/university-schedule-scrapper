@@ -67,7 +67,7 @@ def check_unavailable_classrooms(request):
         html_table += f"<tr><td>{department}</td><td>{', '.join(departments[department])}</td></tr>"
     html_table += "</table>"
     return HttpResponse(f'<a href="/check_unavailable_classrooms_form"><button>Back</button></a> \
-        <br><br><center><h3> A total of {total}/{len(classes)} group studies in {session} </h3><br>{html_table}</center>')
+        <br><br><center><h3> A total of {total}/{len(classes)} group studies in "{weekday[2:]}" {session} </h3><br>{html_table}</center>')
 
 # check_unavailable_classrooms form
 def check_unavailable_classrooms_form(request):
