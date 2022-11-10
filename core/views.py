@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from .models import Class
-from .forms import ChooseScheduleForm, CheckUnavailableClassroomsForm
+from .forms import ChooseScheduleForm, CheckAvailableClassroomsForm
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 import requests
@@ -40,14 +40,28 @@ def get_schedule(selected_class):
     schedule = json_response['html']
     return schedule
 
-# check_unavailable_classrooms view
-def check_unavailable_classrooms(request):
+# check_available_classrooms view
+def check_available_classrooms(request):
+    available_classrooms = [
+                      'Amphi: GOLLI Salem',  'Amphi: LAATIRI Mokhtar', 'B08-A', 'B09', 'B10',
+                      'B16', 'F01', 'F02', 'F03', 'F05', 'G01', 'G02', 'G03', 'G04', 'G05',
+                      'G06', 'G07', 'G08', 'G10', 'G12', 'G13', 'G14', 'G15', 'G16', 'G17',
+                      'G18', 'G19', 'G20', 'G21', 'H01', 'H02', 'H03', 'H04', 'H05', 'H06',
+                      'H07', 'H08', 'H09', 'H10', 'H11', 'H12', 'H13', 'H14', 'I-02', 'I-03',
+                      'I-04', 'I-05', 'I-06', 'I-07', 'I-08', 'I-09', 'I-10', 'I-11', 'I-12',
+                      'I-13', 'I-14', 'I-15', 'I-16', 'I-17', 'I-18', 'I-19', 'J05', 'J06', 'J07',
+                      'J08', 'J09', 'K01', 'K02', 'K03', 'K04', 'K05', 'K06', 'K07', 'K08', 'K09',
+                      'K10', 'K11', 'K12', 'K13', 'L01', 'L02', 'L03', 'L04', 'L05', 'L06', 'M01',
+                      'M01-1', 'M01-2', 'M01-3', 'M02', 'M03', 'M04', 'M05', 'M06', 'M07', 'M08',
+                      'M09', 'M10', 'M11', 'M12', 'M13', 'M14', 'M15', 'M16', 'M17', 'M18-1', 'M18-2'
+                    ]
+    
     weekday = request.GET.get('weekday')
     session = request.GET.get('session')
+
     if session == "S4'":
         if weekday != "6-Samedi":
-            return HttpResponse("<center><h2>S4' is only available on Saturday</h2></center><a href='check_unavailable_classrooms_form'><button>Back</button></a>")
-    unavailable_classrooms = set()
+            return HttpResponse("<center><h2>S4' is only available on Saturday</h2></center><a href='check_available_classrooms_form'><button>Back</button></a>")
     departments = {}
     total = 0
     classes = Class.objects.all()
@@ -56,8 +70,10 @@ def check_unavailable_classrooms(request):
         occupied_classrooms = json.loads(occupied_classrooms)
         if weekday in occupied_classrooms and session in occupied_classrooms[weekday]:
             total += 1
-            unavailable_classrooms.update(occupied_classrooms[weekday][session])
-    for classroom in sorted(unavailable_classrooms):
+            for occupied_classroom in occupied_classrooms[weekday][session]:
+                if occupied_classroom in available_classrooms:
+                    available_classrooms.remove(occupied_classroom)
+    for classroom in sorted(available_classrooms):
         if classroom[0] in departments:
             departments[classroom[0]].append(classroom)
         else:
@@ -66,13 +82,13 @@ def check_unavailable_classrooms(request):
     for department in departments:
         html_table += f"<tr><td>{department}</td><td>{', '.join(departments[department])}</td></tr>"
     html_table += "</table>"
-    return HttpResponse(f'<a href="/check_unavailable_classrooms_form"><button>Back</button></a> \
+    return HttpResponse(f'<a href="/check_available_classrooms_form"><button>Back</button></a> \
         <br><br><center><h3> A total of {total}/{len(classes)} group studies in "{weekday[2:]}" {session} </h3><br>{html_table}</center>')
 
-# check_unavailable_classrooms form
-def check_unavailable_classrooms_form(request):
-    form = CheckUnavailableClassroomsForm()
-    return render(request, 'check_unavailable_classrooms_form.html', {'form': form})
+# check_available_classrooms form
+def check_available_classrooms_form(request):
+    form = CheckAvailableClassroomsForm()
+    return render(request, 'check_available_classrooms_form.html', {'form': form})
 
 def html_parse(schedule_html):
     weekdays = ["1-Lundi", "2-Mardi", "3-Mercredi", "4-Jeudi", "5-Vendredi", "6-Samedi"]

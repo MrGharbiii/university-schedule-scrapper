@@ -25,7 +25,7 @@ class ChooseScheduleForm(forms.Form):
                 ]]
     classes = forms.ChoiceField(choices=classes)
 
-class CheckUnavailableClassroomsForm(forms.Form):
+class CheckAvailableClassroomsForm(forms.Form):
   weekdays = [weekday for weekday in [("1-Lundi", "Lundi"), ("2-Mardi", "Mardi"), ("3-Mercredi", "Mercredi"),
                 ("4-Jeudi", "Jeudi"), ("5-Vendredi", "Vendredi"), ("6-Samedi", "Samedi")]]
   weekday = forms.ChoiceField(choices=weekdays)
