@@ -35,10 +35,13 @@ def get_schedule(selected_class):
         "Authorization" : TOKEN
     }
     print("Getting schedule of " + selected_class)
-    response = requests.get(f'https://issatso.rnu.tn/bo/public/api/student/timetable/{selected_class}', headers=headers)
-    json_response = response.json()
-    schedule = json_response['html']
-    return schedule
+    try:
+        response = requests.get(f'https://issatso.rnu.tn/bo/public/api/student/timetable/{selected_class}', headers=headers)
+        json_response = response.json()
+        schedule = json_response['html']
+        return schedule
+    except ConnectionError:
+        return None
 
 # check_available_classrooms view
 def check_available_classrooms(request):
@@ -144,10 +147,11 @@ def update_schedules(request):
 
 def store_schedule(_class):
     schedule_html = get_schedule(_class)
-    if Class.objects.filter(name=_class).exists():
-        _class = Class.objects.get(name=_class)
-        _class.schedule_html = schedule_html
-        _class.occupied_classrooms = html_parse(schedule_html)
-        _class.save()
-    else:
-        Class(name=_class, schedule_html=schedule_html, occupied_classrooms=html_parse(schedule_html)).save()
+    if schedule_html != None:
+        if Class.objects.filter(name=_class).exists():
+            _class = Class.objects.get(name=_class)
+            _class.schedule_html = schedule_html
+            _class.occupied_classrooms = html_parse(schedule_html)
+            _class.save()
+        else:
+            Class(name=_class, schedule_html=schedule_html, occupied_classrooms=html_parse(schedule_html)).save()
