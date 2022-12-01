@@ -32,4 +32,21 @@ class CheckAvailableClassroomsForm(forms.Form):
   sessions = [session for session in [("S1", "S1"), ("S2", "S2"), ("S3", "S3"), ("S4", "S4"), ("S4'", "S4'"), ("S5", "S5"), ("S6", "S6")]]
   session = forms.ChoiceField(choices=sessions)
 
+class CheckClassroomAvailabilityForm(forms.Form):
+  classrooms = [(_classroom, _classroom) for _classroom in [
+                      'Amphi: GOLLI Salem',  'Amphi: LAATIRI Mokhtar', 'B08-A', 'B09', 'B10',
+                      'B16', 'F01', 'F02', 'F03', 'F05', 'G01', 'G02', 'G03', 'G04', 'G05',
+                      'G06', 'G07', 'G08', 'G10', 'G12', 'G13', 'G14', 'G15', 'G16', 'G17',
+                      'G18', 'G19', 'G20', 'G21', 'H01', 'H02', 'H03', 'H04', 'H05', 'H06',
+                      'H07', 'H08', 'H09', 'H10', 'H11', 'H12', 'H13', 'H14', 'I-02', 'I-03',
+                      'I-04', 'I-05', 'I-06', 'I-07', 'I-08', 'I-09', 'I-10', 'I-11', 'I-12',
+                      'I-13', 'I-14', 'I-15', 'I-16', 'I-17', 'I-18', 'I-19', 'J05', 'J06', 'J07',
+                      'J08', 'J09', 'K01', 'K02', 'K03', 'K04', 'K05', 'K06', 'K07', 'K08', 'K09',
+                      'K10', 'K11', 'K12', 'K13', 'L01', 'L02', 'L03', 'L04', 'L05', 'L06', 'M01',
+                      'M01-1', 'M01-2', 'M01-3', 'M02', 'M03', 'M04', 'M05', 'M06', 'M07', 'M08',
+                      'M09', 'M10', 'M11', 'M12', 'M13', 'M14', 'M15', 'M16', 'M17', 'M18-1', 'M18-2'
+                    ]]
+  classroom = forms.ChoiceField(choices=classrooms)
+  
+
 

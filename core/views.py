@@ -1,14 +1,11 @@
-from concurrent.futures import ThreadPoolExecutor
-from django.contrib import messages
+from .forms import ChooseScheduleForm, CheckAvailableClassroomsForm, CheckClassroomAvailabilityForm
 from django.http import HttpResponse
-from django.shortcuts import redirect, render
-from .models import Class
-from .forms import ChooseScheduleForm, CheckAvailableClassroomsForm
+from django.shortcuts import render
+
+from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
-from bs4 import BeautifulSoup
-import requests
-import json
-import os
+from .models import Class
+from . import functions
 
 # load env variables
 load_dotenv()
@@ -28,21 +25,6 @@ def schedule(request):
             return HttpResponse(f'<a href="/"><button>Back</button></a><br><br>{schedule_html}')
         except Class.DoesNotExist:
             return render(request, 'error.html')
-
-def get_schedule(url, selected_class):
-    TOKEN = os.getenv('TOKEN')
-
-    headers = {
-        "Authorization" : TOKEN
-    }
-    print("Getting schedule of " + selected_class)
-    try:
-        response = requests.get(f'{url}{selected_class}', headers=headers)
-        json_response = response.json()
-        schedule = json_response['html']
-        return schedule
-    except ConnectionError:
-        return None
 
 # check_available_classrooms view
 def check_available_classrooms(request):
@@ -70,12 +52,12 @@ def check_available_classrooms(request):
     total = 0
     classes = Class.objects.all()
     for class_ in classes:
-        occupied_classrooms = class_.occupied_classrooms.replace("'", '"').replace("\"S4\"\"", "\"S4'\"")
-        occupied_classrooms = json.loads(occupied_classrooms)
+        occupied_classrooms_str = class_.occupied_classrooms
+        occupied_classrooms_json = functions.parse_str_occupied_classrooms_to_json(occupied_classrooms_str)
 
-        if weekday in occupied_classrooms and session in occupied_classrooms[weekday]:
+        if weekday in occupied_classrooms_json and session in occupied_classrooms_json[weekday]:
             total += 1
-            for occupied_classroom in occupied_classrooms[weekday][session]:
+            for occupied_classroom in occupied_classrooms_json[weekday][session]:
                 if occupied_classroom in available_classrooms:
                     available_classrooms.remove(occupied_classroom)
     for classroom in sorted(available_classrooms):
@@ -95,65 +77,11 @@ def check_available_classrooms_form(request):
     form = CheckAvailableClassroomsForm()
     return render(request, 'check_available_classrooms_form.html', {'form': form})
 
-def html_parse(schedule_html):
-    weekdays = ["1-Lundi", "2-Mardi", "3-Mercredi", "4-Jeudi", "5-Vendredi", "6-Samedi"]
-    sessions = ["S1", "S2", "S3", "S4", "S4'", "S5", "S6"]
-    occupied_classrooms = {}
-    soup = BeautifulSoup(schedule_html, features="html5lib")
-    table = soup.find('table')
-    rows = table.find_all('tr')
-    for row in rows:
-        cells = row.find_all('td')
-        try:
-            classroom = cells[6].text
-        except:
-            continue
-        for cell in cells:
-            if cell.text in weekdays and not cell.text in occupied_classrooms:
-                weekday = cell.text
-                occupied_classrooms[weekday] = {}
-                break
-            elif cell.text in sessions:
-                session = cell.text
-                if session in occupied_classrooms[weekday]: 
-                    occupied_classrooms[weekday][session] += [classroom]
-                else:
-                    occupied_classrooms[weekday][session] = [classroom]
-                    break
-    return occupied_classrooms
-
-def rattrapage_html_parse(schedule_html):
-    weekdays = {
-        "Lundi" : "1-Lundi",
-        "Mardi" : "2-Mardi",
-        "Mercredi": "3-Mercredi",
-        "Jeudi": "4-Jeudi",
-        "Vendredi": "5-Vendredi",
-        "Samedi": "6-Samedi"
-    }
-    sessions = ["S1", "S2", "S3", "S4", "S4'", "S5", "S6"]
-    rattrapage_occupied_classrooms = {}
-    soup = BeautifulSoup(schedule_html, features="html5lib")
-    table = soup.find('table')
-    rows = table.find_all('tr')
-    for row in rows:
-        cells = row.find_all('td')
-        try:
-            classroom = cells[5].text
-        except:
-            continue
-        for cell in cells:
-            if cell.text in weekdays and not cell.text in rattrapage_occupied_classrooms:
-                weekday = weekdays[cell.text]
-                rattrapage_occupied_classrooms[weekday] = {}
-            elif cell.text in sessions:
-                session = cell.text
-                if session in rattrapage_occupied_classrooms[weekday]: 
-                    rattrapage_occupied_classrooms[weekday][session] += [classroom]
-                else:
-                    rattrapage_occupied_classrooms[weekday][session] = [classroom]
-    return rattrapage_occupied_classrooms
-
+def check_classroom_availability(request):
+    classroom = request.GET.get('classroom')
+    if classroom:
+        return
+    return render(request, 'check_classroom_availability.html', {'form': CheckClassroomAvailabilityForm()})
 
 # a view to update the schedules in the database
 def update_schedules(request):
@@ -180,34 +108,7 @@ def update_schedules(request):
                   "Prepa-A2-03","Prepa-A2-04","MP-MERE-A1-01","MP-ENG-A1-01"
                 ]
     with ThreadPoolExecutor(max_workers=len(classes)) as executor:
-        executor.map(store_schedule, classes)
+        executor.map(functions.store_schedule, classes)
     return HttpResponse("<h1>Schedules Updated!</h1> <br><br><a href='/'><button>Back</button></a>")
 
-def store_schedule(_class):
-    schedule_html = get_schedule(os.getenv("SCHEDULE_URL"), _class)
-    rattrapage_html = get_schedule(os.getenv("RATTRAPAGE_URL"), _class)
-    if schedule_html != None or rattrapage_html != None:
-        if Class.objects.filter(name=_class).exists():
-            _class = Class.objects.get(name=_class)
-            _class.schedule_html = schedule_html
-            _class.occupied_classrooms = merge_schedules_and_their_rattrapage(
-                html_parse(schedule_html),
-                rattrapage_html_parse(rattrapage_html)
-            )
-            _class.save()
-        else:
-            Class(name=_class, schedule_html=schedule_html, occupied_classrooms=merge_schedules_and_their_rattrapage(html_parse(schedule_html), rattrapage_html_parse(rattrapage_html))).save()
-
-def merge_schedules_and_their_rattrapage(occupied_classrooms, rattrapage_occupied_classrooms):
-    if rattrapage_occupied_classrooms:
-        for rattrapage_weekday in rattrapage_occupied_classrooms:
-            if rattrapage_weekday in occupied_classrooms:
-                for rattrapage_session in rattrapage_occupied_classrooms[rattrapage_weekday]:
-                    if rattrapage_session in occupied_classrooms[rattrapage_weekday]:
-                         occupied_classrooms[rattrapage_weekday][rattrapage_session] += rattrapage_occupied_classrooms[rattrapage_weekday][rattrapage_session]
-                    else:
-                         occupied_classrooms[rattrapage_weekday][rattrapage_session] = rattrapage_occupied_classrooms[rattrapage_weekday][rattrapage_session]
-            else:
-                occupied_classrooms[rattrapage_weekday] = rattrapage_occupied_classrooms[rattrapage_weekday]
-    return occupied_classrooms
 
