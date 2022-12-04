@@ -79,9 +79,21 @@ def check_available_classrooms_form(request):
 
 def check_classroom_availability(request):
     classroom = request.GET.get('classroom')
+    form = CheckClassroomAvailabilityForm()
+    context = {'form': form}
     if classroom:
-        return
-    return render(request, 'check_classroom_availability.html', {'form': CheckClassroomAvailabilityForm()})
+        classroom_availability_in_the_week = functions.classroom_availability_in_the_week(classroom)
+        html_table = f"<table border=1><tr><th>{classroom}</th></tr><tr><th>Day</th><th>S1</th> \
+        <th>S2</th><th>S3</th><th>S4</th><th>S5</th><th>S6</th><th>S4'</th></tr>"
+        for day in classroom_availability_in_the_week:
+            html_table += f"<tr><td>{day}</td>"
+            for session in classroom_availability_in_the_week[day]:
+                html_table += f"<td>{classroom_availability_in_the_week[day][session]}</td>"
+            html_table += "</tr>"
+        html_table += "</table>"
+        return HttpResponse(f'<a href="/check_classroom_availability"><button>Back</button></a> \
+            <br><br><center>{html_table}</center>')
+    return render(request, 'check_classroom_availability.html', context)
 
 # a view to update the schedules in the database
 def update_schedules(request):

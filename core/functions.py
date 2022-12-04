@@ -83,6 +83,22 @@ def parse_str_occupied_classrooms_to_json(occupied_classrooms_str):
     occupied_classrooms = json.loads(occupied_classrooms)
     return occupied_classrooms
 
+def classroom_availability_in_the_week(classroom):
+    classes = Class.objects.all()
+    classroom_availability = {}
+    for _class in classes:
+        occupied_classrooms = parse_str_occupied_classrooms_to_json(_class.occupied_classrooms)
+        if occupied_classrooms:
+            for weekday in occupied_classrooms:
+                if weekday not in classroom_availability:
+                    classroom_availability[weekday] = {}
+                for session in occupied_classrooms[weekday]:
+                    if session not in classroom_availability[weekday]:
+                        classroom_availability[weekday][session] = "Free"
+                    if classroom in occupied_classrooms[weekday][session]:
+                        classroom_availability[weekday][session] = "Occupied"
+    return classroom_availability
+
 def store_schedule(_class):
     schedule_html = get_schedule(os.getenv("SCHEDULE_URL"), _class)
     rattrapage_html = get_schedule(os.getenv("RATTRAPAGE_URL"), _class)
