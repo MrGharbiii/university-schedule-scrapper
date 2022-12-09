@@ -116,7 +116,7 @@ def update_schedules(request):
                   "Prepa-A1-02","Prepa-A1-03","Prepa-A1-04","Prepa-A2-01","Prepa-A2-02",
                   "Prepa-A2-03","Prepa-A2-04","MP-MERE-A1-01","MP-ENG-A1-01"
                 ]
-    with ThreadPoolExecutor(max_workers=len(classes)) as executor:
+    with ThreadPoolExecutor(max_workers=10) as executor:
         executor.map(functions.store_schedule, classes)
     return HttpResponse("<h1>Schedules Updated!</h1> <br><br><a href='/'><button>Back</button></a>")
 
