@@ -1,9 +1,12 @@
+from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 from .models import Class
 import requests
 import json
 import os
 
+# load env variables
+load_dotenv()
 
 def get_schedule(url, selected_class):
     TOKEN = os.getenv('TOKEN')

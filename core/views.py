@@ -3,12 +3,9 @@ from django.http import HttpResponse
 from django.shortcuts import render
 
 from concurrent.futures import ThreadPoolExecutor
-from dotenv import load_dotenv
 from .models import Class
 from . import functions
 
-# load env variables
-load_dotenv()
 # a schedules_list view where it displays a dropdown box contains list of class and a submit button
 # and send the form to schedule_list.html
 def schedules_list(request):
