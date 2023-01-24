@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 from .models import Class
 import requests
@@ -87,17 +88,20 @@ def parse_str_occupied_classrooms_to_json(occupied_classrooms_str):
     return occupied_classrooms
 
 def classroom_availability_in_the_week(classroom):
+    print("Getting availability of " + classroom)
     classes = Class.objects.all()
-    classroom_availability = {}
+    classroom_availability = {"1-Lundi": {"S1": "Free", "S2": "Free", "S3":"Free", "S4":"Free", "S5":"Free", "S6":"Free"},
+                              "2-Mardi": {"S1": "Free", "S2": "Free", "S3":"Free", "S4":"Free", "S5":"Free", "S6":"Free"},
+                              "3-Mercredi": {"S1": "Free", "S2": "Free", "S3":"Free", "S4":"Free", "S5":"Free", "S6":"Free"},
+                              "4-Jeudi": {"S1": "Free", "S2": "Free", "S3":"Free", "S4":"Free", "S5":"Free", "S6":"Free"},
+                              "5-Vendredi": {"S1": "Free", "S2": "Free", "S3":"Free", "S4":"Free", "S5":"Free", "S6":"Free"},
+                              "6-Samedi": {"S1": "Free", "S2": "Free", "S3":"Free", "S4":"Free", "S4'":"Free", "S5":"Free", "S6":"Free"}
+                              }
     for _class in classes:
         occupied_classrooms = parse_str_occupied_classrooms_to_json(_class.occupied_classrooms)
         if occupied_classrooms:
             for weekday in occupied_classrooms:
-                if weekday not in classroom_availability:
-                    classroom_availability[weekday] = {}
                 for session in occupied_classrooms[weekday]:
-                    if session not in classroom_availability[weekday]:
-                        classroom_availability[weekday][session] = "Free"
                     if classroom in occupied_classrooms[weekday][session]:
                         classroom_availability[weekday][session] = "Occupied"
     return classroom_availability
