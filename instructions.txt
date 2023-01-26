@@ -1,8 +1,8 @@
 1- Download the required packages with python -m pip install -r requirements.txt
 2- Create .env file and insert the following:
-TOKEN=
-SCHEDULE_URL=
-RATTRAPAGE_URL=
+TOKEN= (Insert your issatso+ token here starting with "Bearer" word)
+RATTRAPAGE_URL=https://issatso.rnu.tn/bo/public/api/student/rattrapage/
+SCHEDULE_URL=https://issatso.rnu.tn/bo/public/api/student/timetable/
 3- Run python manage.py migrate
 4- Run python manage.py runserver
 5- go to /update_schedules route everytime you open the website to get the latest rattrapage schedules.
