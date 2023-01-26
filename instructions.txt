@@ -1,9 +1,10 @@
-1- Download the required packages with python -m pip install -r requirements.txt
-2- Create .env file and insert the following:
-TOKEN= (Insert your issatso+ token here starting with "Bearer" word)
+1- Run "git clone https://github.com/Younes-ch/university-schedule-scrapper.git" on your CLI.
+2- Download the required packages with python -m pip install -r requirements.txt.
+3- Create .env file and insert the following:
+TOKEN= (Insert your ISSATSo+ Authorization Token here starting with "Bearer" word)
 RATTRAPAGE_URL=https://issatso.rnu.tn/bo/public/api/student/rattrapage/
 SCHEDULE_URL=https://issatso.rnu.tn/bo/public/api/student/timetable/
-3- Run python manage.py migrate
-4- Run python manage.py runserver
-5- Run "git pull" on GIT CLI and go to /update_schedules route everytime you open the website to get the latest project updates and rattrapage schedules.
-6- Done! You can view the schedules.
+4- Run python manage.py migrate
+5- Run python manage.py runserver
+6- Run "git pull" on GIT CLI and go to /update_schedules route everytime you open the website to get the latest project updates and rattrapage schedules.
+7- Done! You can view the schedules.
